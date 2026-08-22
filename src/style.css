@@ -85,11 +85,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .brand-logo {
   display: block;
-  width: 142px;
-  height: 62px;
-  border-radius: 4px;
-  object-fit: cover;
-  object-position: center 48%;
+  width: 132px;
+  height: 64px;
+  object-fit: contain;
+  object-position: center;
 }
 
 .main-nav {

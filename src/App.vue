@@ -123,7 +123,7 @@ async function prepareMessage(event: Event) {
   <header class="site-header" @keydown.esc="closeMenu">
     <div class="container header-inner">
       <a class="brand" href="#inicio" aria-label="Dr. Edrey Mundoco — início" @click="closeMenu">
-        <img class="brand-logo" src="/logo-edrey.jpeg" alt="Dr. Edrey Mundoco, cirurgião-dentista" />
+        <img class="brand-logo" src="/logo-edrey-transparent.png" alt="Dr. Edrey Mundoco, cirurgião-dentista" />
       </a>
 
       <button
@@ -383,7 +383,7 @@ async function prepareMessage(event: Event) {
   <footer class="site-footer">
     <div class="container footer-top">
       <a class="brand footer-brand" href="#inicio" aria-label="Voltar ao início">
-        <img class="brand-logo" src="/logo-edrey.jpeg" alt="Dr. Edrey Mundoco, cirurgião-dentista" loading="lazy" />
+        <img class="brand-logo" src="/logo-edrey-transparent.png" alt="Dr. Edrey Mundoco, cirurgião-dentista" loading="lazy" />
       </a>
       <p>Cuidado que começa na escuta e se revela em cada sorriso.</p>
       <a class="button button-small" href="#agendamento">Agendar avaliação</a>
