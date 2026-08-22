@@ -321,11 +321,12 @@ h1 em { color: var(--gold-light); font-weight: 400; }
   backdrop-filter: blur(12px);
 }
 
-.caption-monogram {
-  color: var(--gold-light);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 22px;
-  font-style: italic;
+.caption-logo-mark {
+  display: block;
+  width: 52px;
+  height: 42px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .portrait-caption p { display: grid; gap: 3px; margin: 0; }
@@ -622,13 +623,6 @@ h2 em {
   color: #c5c0b7;
   font-size: 12px;
   line-height: 1.4;
-}
-
-.image-label span {
-  color: var(--gold-light);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 21px;
-  font-style: italic;
 }
 
 .about-copy h2,

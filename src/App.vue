@@ -188,7 +188,7 @@ async function prepareMessage(event: Event) {
             />
           </div>
           <div class="portrait-caption">
-            <span class="caption-monogram">EM</span>
+            <img class="caption-logo-mark" src="/logo-edrey-mark.png" alt="" aria-hidden="true" />
             <p><strong>Dr. Edrey Mundoco</strong><small>Cirurgião-dentista</small></p>
           </div>
         </div>
@@ -260,7 +260,10 @@ async function prepareMessage(event: Event) {
               decoding="async"
             />
           </div>
-          <p class="image-label"><span>EM</span> Presença, técnica e atenção aos detalhes.</p>
+          <p class="image-label">
+            <img class="caption-logo-mark" src="/logo-edrey-mark.png" alt="" aria-hidden="true" loading="lazy" />
+            Presença, técnica e atenção aos detalhes.
+          </p>
         </div>
 
         <div class="about-copy">
