@@ -579,7 +579,7 @@ h2 em {
 
 .about-visual {
   position: relative;
-  max-width: 510px;
+  max-width: 440px;
 }
 
 .about-visual::before {
@@ -603,7 +603,7 @@ h2 em {
 .about-image img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 300px;
   object-fit: cover;
   object-position: center 18%;
 }
@@ -1068,7 +1068,8 @@ h2 em {
   .treatment-detail { padding: 0 22px 26px; }
   .section-cta { align-items: stretch; flex-direction: column; }
   .about-grid { grid-template-columns: 1fr; }
-  .about-visual { width: min(100%, 480px); margin-inline: auto; }
+  .about-visual { width: min(100%, 420px); margin-inline: auto; }
+  .about-image img { height: min(70vw, 300px); }
   .about-copy { padding-top: 10px; }
   .faq-grid { grid-template-columns: 1fr; }
   .faq-intro { position: static; }
