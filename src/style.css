@@ -603,7 +603,7 @@ h2 em {
 .about-image img {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1;
   object-fit: cover;
   object-position: center 18%;
 }
