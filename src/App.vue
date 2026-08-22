@@ -123,11 +123,7 @@ async function prepareMessage(event: Event) {
   <header class="site-header" @keydown.esc="closeMenu">
     <div class="container header-inner">
       <a class="brand" href="#inicio" aria-label="Dr. Edrey Mundoco — início" @click="closeMenu">
-        <span class="brand-mark" aria-hidden="true">EM</span>
-        <span class="brand-copy">
-          <strong>Dr. Edrey Mundoco</strong>
-          <small>Cirurgião-dentista</small>
-        </span>
+        <img class="brand-logo" src="/logo-edrey.jpeg" alt="Dr. Edrey Mundoco, cirurgião-dentista" />
       </a>
 
       <button
@@ -184,10 +180,10 @@ async function prepareMessage(event: Event) {
           <div class="portrait-glow" aria-hidden="true"></div>
           <div class="hero-portrait">
             <img
-              src="/edrey-mundoco.png"
+              src="/edrey-retrato.png"
               alt="Dr. Edrey Mundoco em retrato profissional"
-              width="602"
-              height="597"
+              width="1080"
+              height="1610"
               decoding="async"
             />
           </div>
@@ -256,10 +252,10 @@ async function prepareMessage(event: Event) {
         <div class="about-visual">
           <div class="about-image">
             <img
-              src="/edrey-mundoco.png"
-              alt="Peça de identidade visual do Dr. Edrey Mundoco com os tratamentos oferecidos"
-              width="602"
-              height="597"
+              src="/edrey-retrato.png"
+              alt="Retrato profissional do Dr. Edrey Mundoco"
+              width="1080"
+              height="1610"
               loading="lazy"
               decoding="async"
             />
@@ -387,8 +383,7 @@ async function prepareMessage(event: Event) {
   <footer class="site-footer">
     <div class="container footer-top">
       <a class="brand footer-brand" href="#inicio" aria-label="Voltar ao início">
-        <span class="brand-mark" aria-hidden="true">EM</span>
-        <span class="brand-copy"><strong>Dr. Edrey Mundoco</strong><small>Cirurgião-dentista</small></span>
+        <img class="brand-logo" src="/logo-edrey.jpeg" alt="Dr. Edrey Mundoco, cirurgião-dentista" loading="lazy" />
       </a>
       <p>Cuidado que começa na escuta e se revela em cada sorriso.</p>
       <a class="button button-small" href="#agendamento">Agendar avaliação</a>
