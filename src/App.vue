@@ -22,12 +22,14 @@ import {
 const menuOpen = ref(false)
 const activeTreatment = ref<number | null>(0)
 const formStatus = ref('')
+const showIntro = ref(true)
 const whatsappNumber = '559492211681'
 const whatsappLink = `https://wa.me/${whatsappNumber}`
 const instagramLink = 'https://www.instagram.com/dr.edreymundoco/'
 let revealObserver: IntersectionObserver | null = null
 let scrollAnimationFrame: number | null = null
 let removeScrollListener: (() => void) | null = null
+let introTimer: number | null = null
 
 const treatments = [
   {
@@ -98,8 +100,23 @@ function toggleTreatment(index: number) {
   activeTreatment.value = index
 }
 
+function finishIntro() {
+  if (!showIntro.value) return
+  showIntro.value = false
+  document.body.classList.remove('intro-playing')
+  document.documentElement.classList.add('cinematic-ready')
+  if (introTimer !== null) {
+    window.clearTimeout(introTimer)
+    introTimer = null
+  }
+}
+
+function handleIntroKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') finishIntro()
+}
+
 onMounted(() => {
-  const revealElements = document.querySelectorAll<HTMLElement>('[data-reveal]')
+  const revealElements = document.querySelectorAll<HTMLElement>('[data-reveal], [data-cinematic-section]')
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   const updateScrollMotion = () => {
@@ -118,6 +135,14 @@ onMounted(() => {
   }
 
   document.documentElement.classList.add('motion-ready')
+  if (prefersReducedMotion) {
+    showIntro.value = false
+    document.documentElement.classList.add('cinematic-ready')
+  } else {
+    document.body.classList.add('intro-playing')
+    window.addEventListener('keydown', handleIntroKeydown)
+    introTimer = window.setTimeout(finishIntro, 1900)
+  }
   updateScrollMotion()
   window.addEventListener('scroll', scheduleScrollMotion, { passive: true })
   removeScrollListener = () => window.removeEventListener('scroll', scheduleScrollMotion)
@@ -149,7 +174,10 @@ onBeforeUnmount(() => {
   revealObserver?.disconnect()
   removeScrollListener?.()
   if (scrollAnimationFrame !== null) window.cancelAnimationFrame(scrollAnimationFrame)
-  document.documentElement.classList.remove('motion-ready')
+  if (introTimer !== null) window.clearTimeout(introTimer)
+  window.removeEventListener('keydown', handleIntroKeydown)
+  document.body.classList.remove('intro-playing')
+  document.documentElement.classList.remove('motion-ready', 'cinematic-ready')
 })
 
 function sendToWhatsApp(event: Event) {
@@ -181,6 +209,22 @@ function sendToWhatsApp(event: Event) {
 </script>
 
 <template>
+  <Transition name="cinematic-intro" appear>
+    <div v-if="showIntro" class="cinematic-intro" aria-hidden="true" @click="finishIntro">
+      <div class="intro-light"></div>
+      <div class="intro-content">
+        <p class="intro-overline">Uma experiência de cuidado</p>
+        <img src="/logo-edrey-mark.png" alt="" />
+        <p class="intro-name">Dr. Edrey <em>Mundoco</em></p>
+        <div class="intro-meta">
+          <span>01</span><i></i><span>03</span>
+          <small>Odontologia · precisão · presença</small>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <div class="film-grain" aria-hidden="true"></div>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
   <header class="site-header" @keydown.esc="closeMenu">
@@ -215,12 +259,17 @@ function sendToWhatsApp(event: Event) {
   <main id="conteudo">
     <section id="inicio" class="hero" aria-labelledby="hero-title">
       <div class="hero-aurora" aria-hidden="true"></div>
+      <div class="hero-light-beam" aria-hidden="true"></div>
       <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
       <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
       <div class="container hero-grid">
         <div class="hero-copy" data-reveal="left">
           <p class="eyebrow"><span></span> Odontologia com cuidado e precisão</p>
-          <h1 id="hero-title">Seu sorriso merece um cuidado à altura da <em>sua história</em></h1>
+          <h1 id="hero-title">
+            <span class="headline-line"><span>Seu sorriso merece</span></span>
+            <span class="headline-line"><span>um cuidado à altura</span></span>
+            <span class="headline-line"><span><em>da sua história</em></span></span>
+          </h1>
           <p class="hero-lead">
             Um atendimento próximo, transparente e planejado para você se sentir seguro em cada decisão
           </p>
@@ -274,7 +323,7 @@ function sendToWhatsApp(event: Event) {
       </div>
     </section>
 
-    <section id="tratamentos" class="section treatments-section" aria-labelledby="treatments-title">
+    <section id="tratamentos" class="section treatments-section" aria-labelledby="treatments-title" data-cinematic-section>
       <div class="container">
         <div class="section-heading" data-reveal>
           <div>
@@ -328,7 +377,7 @@ function sendToWhatsApp(event: Event) {
       </div>
     </section>
 
-    <section id="sobre" class="section about-section" aria-labelledby="about-title">
+    <section id="sobre" class="section about-section" aria-labelledby="about-title" data-cinematic-section>
       <div class="container about-grid">
         <div class="about-visual" data-reveal="left">
           <div class="about-image">
@@ -378,7 +427,7 @@ function sendToWhatsApp(event: Event) {
       </div>
     </section>
 
-    <section class="section journey-section" aria-labelledby="journey-title">
+    <section class="section journey-section" aria-labelledby="journey-title" data-cinematic-section>
       <div class="container">
         <div class="journey-heading" data-reveal>
           <p class="eyebrow"><span></span> Sua jornada de cuidado</p>
@@ -401,7 +450,7 @@ function sendToWhatsApp(event: Event) {
       </div>
     </section>
 
-    <section id="duvidas" class="section faq-section" aria-labelledby="faq-title">
+    <section id="duvidas" class="section faq-section" aria-labelledby="faq-title" data-cinematic-section>
       <div class="container faq-grid">
         <div class="faq-intro" data-reveal="left">
           <p class="eyebrow"><span></span> Dúvidas frequentes</p>
@@ -420,7 +469,7 @@ function sendToWhatsApp(event: Event) {
       </div>
     </section>
 
-    <section id="agendamento" class="section booking-section" aria-labelledby="booking-title">
+    <section id="agendamento" class="section booking-section" aria-labelledby="booking-title" data-cinematic-section>
       <div class="booking-orbit" aria-hidden="true"></div>
       <div class="container booking-grid">
         <div class="booking-copy" data-reveal="left">
