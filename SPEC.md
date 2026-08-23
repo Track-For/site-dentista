@@ -36,7 +36,7 @@ Criar uma landing page institucional de alta conversão para o cirurgião-dentis
    - menu acessível no mobile.
 2. **Hero**
    - selo “Odontologia com cuidado e precisão”;
-   - headline “Seu sorriso merece um cuidado à altura da sua história.”;
+   - headline “Seu sorriso merece um cuidado à altura da sua história”;
    - texto de apoio curto;
    - CTAs para agendamento e tratamentos;
    - retrato recortado da imagem de identidade visual;

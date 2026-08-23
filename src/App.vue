@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   Activity,
   ArrowDownRight,
   ArrowRight,
   CalendarDays,
+  Camera,
   Check,
   ClipboardCheck,
   HeartHandshake,
   Menu,
   MessageCircle,
   ShieldCheck,
+  Smile,
   Sparkles,
   SunMedium,
   WandSparkles,
@@ -20,36 +22,47 @@ import {
 const menuOpen = ref(false)
 const activeTreatment = ref<number | null>(0)
 const formStatus = ref('')
+const whatsappNumber = '559492211681'
+const whatsappLink = `https://wa.me/${whatsappNumber}`
+const instagramLink = 'https://www.instagram.com/dr.edreymundoco/'
+let revealObserver: IntersectionObserver | null = null
+let scrollAnimationFrame: number | null = null
+let removeScrollListener: (() => void) | null = null
 
 const treatments = [
   {
+    title: 'Ortodontia e aparelhos',
+    description: 'Avaliação para quem quer começar, continuar ou retomar o tratamento com aparelho, com planejamento e acompanhamento individualizado',
+    icon: Smile,
+  },
+  {
     title: 'Clareamento dental',
-    description: 'Um plano supervisionado para devolver luminosidade ao sorriso com segurança e naturalidade.',
+    description: 'Um plano supervisionado para devolver luminosidade ao sorriso com segurança e naturalidade',
     icon: Sparkles,
   },
   {
     title: 'Restaurações estéticas',
-    description: 'Recuperação de forma, função e harmonia com materiais que se integram ao seu sorriso.',
+    description: 'Recuperação de forma, função e harmonia com materiais que se integram ao seu sorriso',
     icon: WandSparkles,
   },
   {
     title: 'Prótese dentária',
-    description: 'Soluções planejadas para restaurar conforto, confiança e qualidade na mastigação.',
+    description: 'Soluções planejadas para restaurar conforto, confiança e qualidade na mastigação',
     icon: ShieldCheck,
   },
   {
     title: 'Tratamento de canal',
-    description: 'Cuidado criterioso para preservar o dente e aliviar o desconforto, respeitando cada etapa clínica.',
+    description: 'Cuidado criterioso para preservar o dente e aliviar o desconforto, respeitando cada etapa clínica',
     icon: Activity,
   },
   {
     title: 'Limpeza preventiva',
-    description: 'Prevenção e acompanhamento para manter dentes e gengivas saudáveis ao longo do tempo.',
+    description: 'Prevenção e acompanhamento para manter dentes e gengivas saudáveis ao longo do tempo',
     icon: SunMedium,
   },
   {
     title: 'Extrações',
-    description: 'Avaliação responsável e procedimento conduzido com atenção ao conforto e à recuperação.',
+    description: 'Avaliação responsável e procedimento conduzido com atenção ao conforto e à recuperação',
     icon: Check,
   },
 ]
@@ -58,12 +71,12 @@ const faqs = [
   {
     question: 'Como funciona a primeira avaliação?',
     answer:
-      'A consulta começa com uma conversa sobre suas necessidades e expectativas. Depois da avaliação clínica, você recebe uma explicação clara sobre os possíveis caminhos de cuidado.',
+      'A consulta começa com uma conversa sobre suas necessidades e expectativas. Depois da avaliação clínica, você recebe uma explicação clara sobre os possíveis caminhos de cuidado',
   },
   {
     question: 'Qual tratamento é o mais indicado para mim?',
     answer:
-      'A indicação depende da avaliação individual. O objetivo é compreender sua saúde bucal, suas prioridades e construir um plano coerente com o seu momento.',
+      'A indicação depende da avaliação individual. O objetivo é compreender sua saúde bucal, suas prioridades e construir um plano coerente com o seu momento',
   },
   {
     question: 'Posso tirar dúvidas antes de decidir?',
@@ -82,37 +95,87 @@ function closeMenu() {
 }
 
 function toggleTreatment(index: number) {
-  activeTreatment.value = activeTreatment.value === index ? null : index
+  activeTreatment.value = index
 }
 
-async function prepareMessage(event: Event) {
+onMounted(() => {
+  const revealElements = document.querySelectorAll<HTMLElement>('[data-reveal]')
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  const updateScrollMotion = () => {
+    const scrollableHeight = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1)
+    const progress = Math.min(window.scrollY / scrollableHeight, 1)
+    const heroParallax = Math.min(window.scrollY * 0.075, 44)
+
+    document.documentElement.style.setProperty('--page-progress', String(progress))
+    document.documentElement.style.setProperty('--hero-parallax', `${heroParallax}px`)
+    scrollAnimationFrame = null
+  }
+
+  const scheduleScrollMotion = () => {
+    if (scrollAnimationFrame !== null) return
+    scrollAnimationFrame = window.requestAnimationFrame(updateScrollMotion)
+  }
+
+  document.documentElement.classList.add('motion-ready')
+  updateScrollMotion()
+  window.addEventListener('scroll', scheduleScrollMotion, { passive: true })
+  removeScrollListener = () => window.removeEventListener('scroll', scheduleScrollMotion)
+
+  if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+    revealElements.forEach((element) => {
+      element.dataset.revealed = 'true'
+    })
+    return
+  }
+
+  revealObserver = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        const element = entry.target as HTMLElement
+        element.dataset.revealed = 'true'
+        observer.unobserve(entry.target)
+      })
+    },
+    { threshold: 0.14, rootMargin: '0px 0px -8% 0px' },
+  )
+
+  revealElements.forEach((element) => revealObserver?.observe(element))
+
+})
+
+onBeforeUnmount(() => {
+  revealObserver?.disconnect()
+  removeScrollListener?.()
+  if (scrollAnimationFrame !== null) window.cancelAnimationFrame(scrollAnimationFrame)
+  document.documentElement.classList.remove('motion-ready')
+})
+
+function sendToWhatsApp(event: Event) {
   const form = event.currentTarget as HTMLFormElement
   const data = new FormData(form)
   const name = String(data.get('name') || '').trim()
-  const interest = String(data.get('interest') || '').trim()
+  const orthodonticNeed = String(data.get('orthodonticNeed') || '').trim()
   const period = String(data.get('period') || '').trim()
-  const message = `Olá, sou ${name}. Gostaria de conversar sobre ${interest}. Tenho preferência pelo período ${period}.`
+  const details = String(data.get('details') || '').trim()
+  const message = [
+    'Olá! Gostaria de solicitar um atendimento com o Dr. Edrey Mundoco.',
+    '',
+    'Profissional desejado: Dr. Edrey Mundoco',
+    `Nome: ${name}`,
+    `O que preciso: ${orthodonticNeed}`,
+    `Melhor período: ${period}`,
+    `Detalhes: ${details}`,
+  ].join('\n')
+  const whatsappUrl = `${whatsappLink}?text=${encodeURIComponent(message)}`
 
-  formStatus.value = ''
-
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: 'Pedido de avaliação odontológica', text: message })
-      formStatus.value = 'Mensagem compartilhada. Agora é só enviá-la ao contato oficial da clínica.'
-      return
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        formStatus.value = 'Compartilhamento cancelado. Você pode tentar novamente quando quiser.'
-        return
-      }
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(message)
-    formStatus.value = 'Mensagem copiada. Envie-a ao contato oficial da clínica para solicitar seu horário.'
-  } catch {
-    formStatus.value = `Mensagem pronta: “${message}”`
+  formStatus.value = 'Abrindo sua conversa no WhatsApp…'
+  const whatsappWindow = window.open(whatsappUrl, '_blank')
+  if (whatsappWindow) {
+    whatsappWindow.opener = null
+  } else {
+    window.location.href = whatsappUrl
   }
 }
 </script>
@@ -121,6 +184,7 @@ async function prepareMessage(event: Event) {
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
   <header class="site-header" @keydown.esc="closeMenu">
+    <span class="scroll-progress" aria-hidden="true"></span>
     <div class="container header-inner">
       <a class="brand" href="#inicio" aria-label="Dr. Edrey Mundoco — início" @click="closeMenu">
         <img class="brand-logo" src="/logo-edrey-transparent.png" alt="Dr. Edrey Mundoco, cirurgião-dentista" />
@@ -141,7 +205,7 @@ async function prepareMessage(event: Event) {
       <nav id="main-navigation" class="main-nav" :class="{ 'is-open': menuOpen }" aria-label="Principal">
         <a href="#inicio" @click="closeMenu">Início</a>
         <a href="#tratamentos" @click="closeMenu">Tratamentos</a>
-        <a href="#sobre" @click="closeMenu">Sobre</a>
+        <a href="#sobre" @click="closeMenu">Quem sou</a>
         <a href="#duvidas" @click="closeMenu">Dúvidas</a>
         <a class="button button-small" href="#agendamento" @click="closeMenu">Agendar avaliação</a>
       </nav>
@@ -150,14 +214,15 @@ async function prepareMessage(event: Event) {
 
   <main id="conteudo">
     <section id="inicio" class="hero" aria-labelledby="hero-title">
+      <div class="hero-aurora" aria-hidden="true"></div>
       <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
       <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
       <div class="container hero-grid">
-        <div class="hero-copy">
+        <div class="hero-copy" data-reveal="left">
           <p class="eyebrow"><span></span> Odontologia com cuidado e precisão</p>
-          <h1 id="hero-title">Seu sorriso merece um cuidado à altura da <em>sua história.</em></h1>
+          <h1 id="hero-title">Seu sorriso merece um cuidado à altura da <em>sua história</em></h1>
           <p class="hero-lead">
-            Um atendimento próximo, transparente e planejado para você se sentir seguro em cada decisão.
+            Um atendimento próximo, transparente e planejado para você se sentir seguro em cada decisão
           </p>
           <div class="hero-actions">
             <a class="button" href="#agendamento">
@@ -176,8 +241,10 @@ async function prepareMessage(event: Event) {
           </div>
         </div>
 
-        <div class="hero-portrait-wrap">
+        <div class="hero-portrait-wrap" data-reveal="right">
           <div class="portrait-glow" aria-hidden="true"></div>
+          <span class="portrait-spark portrait-spark-one" aria-hidden="true"></span>
+          <span class="portrait-spark portrait-spark-two" aria-hidden="true"></span>
           <div class="hero-portrait">
             <img
               src="/edrey-retrato.png"
@@ -192,11 +259,15 @@ async function prepareMessage(event: Event) {
             <p><strong>Dr. Edrey Mundoco</strong><small>Cirurgião-dentista</small></p>
           </div>
         </div>
+        <a class="hero-scroll-cue" href="#tratamentos" aria-label="Rolar para conhecer os tratamentos">
+          <span aria-hidden="true"></span>
+          Role para descobrir
+        </a>
       </div>
     </section>
 
     <section class="trust-strip" aria-label="Compromissos do atendimento">
-      <div class="container trust-grid">
+      <div class="container trust-grid" data-reveal>
         <p><span>01</span> Atendimento individualizado</p>
         <p><span>02</span> Planejamento transparente</p>
         <p><span>03</span> Cuidado em cada etapa</p>
@@ -205,13 +276,13 @@ async function prepareMessage(event: Event) {
 
     <section id="tratamentos" class="section treatments-section" aria-labelledby="treatments-title">
       <div class="container">
-        <div class="section-heading">
+        <div class="section-heading" data-reveal>
           <div>
             <p class="eyebrow"><span></span> Tratamentos</p>
-            <h2 id="treatments-title">Cuidado completo para a saúde e a <em>estética do sorriso.</em></h2>
+            <h2 id="treatments-title">Cuidado completo para a saúde e a <em>estética do sorriso</em></h2>
           </div>
           <p>
-            Cada tratamento começa com diagnóstico e conversa. Explore as possibilidades e descubra o que faz sentido para você.
+            Atenção especial para quem deseja iniciar, continuar ou retomar o tratamento com aparelho, além de cuidados completos para o sorriso
           </p>
         </div>
 
@@ -221,6 +292,7 @@ async function prepareMessage(event: Event) {
             :key="treatment.title"
             class="treatment-card"
             :class="{ 'is-active': activeTreatment === index }"
+            data-reveal
           >
             <button
               type="button"
@@ -233,15 +305,24 @@ async function prepareMessage(event: Event) {
               <strong>{{ treatment.title }}</strong>
               <ArrowRight class="treatment-arrow" :size="20" aria-hidden="true" />
             </button>
-            <div v-show="activeTreatment === index" :id="`treatment-${index}`" class="treatment-detail">
-              <p>{{ treatment.description }}</p>
-              <a href="#agendamento">Conversar sobre este cuidado <ArrowRight :size="15" aria-hidden="true" /></a>
+            <div
+              :id="`treatment-${index}`"
+              class="treatment-detail"
+              :class="{ 'is-open': activeTreatment === index }"
+              :aria-hidden="activeTreatment !== index"
+            >
+              <div class="treatment-detail-inner">
+                <p>{{ treatment.description }}</p>
+                <a href="#agendamento" :tabindex="activeTreatment === index ? 0 : -1">
+                  Conversar sobre este cuidado <ArrowRight :size="15" aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </article>
         </div>
 
-        <div class="section-cta">
-          <p><strong>Não sabe por onde começar?</strong> A avaliação é o primeiro passo para um plano realmente seu.</p>
+        <div class="section-cta" data-reveal>
+          <p><strong>Não sabe por onde começar?</strong> <span>A avaliação é o primeiro passo para um plano realmente seu</span></p>
           <a class="button button-outline" href="#agendamento">Quero cuidar do meu sorriso</a>
         </div>
       </div>
@@ -249,7 +330,7 @@ async function prepareMessage(event: Event) {
 
     <section id="sobre" class="section about-section" aria-labelledby="about-title">
       <div class="container about-grid">
-        <div class="about-visual">
+        <div class="about-visual" data-reveal="left">
           <div class="about-image">
             <img
               src="/edrey-retrato.png"
@@ -262,28 +343,32 @@ async function prepareMessage(event: Event) {
           </div>
           <p class="image-label">
             <img class="caption-logo-mark" src="/logo-edrey-mark.png" alt="" aria-hidden="true" loading="lazy" />
-            Presença, técnica e atenção aos detalhes.
+            Presença, técnica e atenção aos detalhes
           </p>
         </div>
 
-        <div class="about-copy">
-          <p class="eyebrow"><span></span> Sobre o atendimento</p>
-          <h2 id="about-title">Confiança nasce quando você <em>entende cada escolha.</em></h2>
+        <div class="about-copy" data-reveal="right">
+          <p class="eyebrow"><span></span> Quem sou</p>
+          <h2 id="about-title">Sou o Dr. Edrey Mundoco e acredito em um cuidado <em>próximo e bem explicado</em></h2>
           <p class="about-lead">
-            Com o Dr. Edrey Mundoco, o cuidado começa pela escuta. Cada conversa ajuda a construir um plano claro, respeitoso e alinhado ao que você precisa.
+            Sou cirurgião-dentista, formado pela Faculdade Integrada Carajás (FIC), e meu atendimento começa pela escuta. Recebo pacientes que desejam iniciar, continuar ou retomar o tratamento com aparelho, sempre com avaliação individual e um plano claro para cada etapa
           </p>
+          <div class="professional-register">
+            <ShieldCheck :size="24" aria-hidden="true" />
+            <p><small>Registro profissional</small><strong>CRO/PA 13457</strong></p>
+          </div>
           <div class="about-points">
             <div>
               <HeartHandshake :size="22" aria-hidden="true" />
-              <p><strong>Acolhimento de verdade</strong><span>Espaço para falar sobre expectativas, dúvidas e receios.</span></p>
+              <p><strong>Acolhimento de verdade</strong><span>Espaço para falar sobre expectativas, dúvidas e receios</span></p>
             </div>
             <div>
               <ClipboardCheck :size="22" aria-hidden="true" />
-              <p><strong>Decisões bem explicadas</strong><span>Orientação simples para você participar do próprio tratamento.</span></p>
+              <p><strong>Decisões bem explicadas</strong><span>Orientação simples para você participar do próprio tratamento</span></p>
             </div>
             <div>
               <ShieldCheck :size="22" aria-hidden="true" />
-              <p><strong>Cuidado responsável</strong><span>Planejamento atento à função, à saúde e à naturalidade do sorriso.</span></p>
+              <p><strong>Cuidado responsável</strong><span>Planejamento atento à função, à saúde e à naturalidade do sorriso</span></p>
             </div>
           </div>
           <a class="text-link text-link-gold" href="#agendamento">
@@ -295,22 +380,22 @@ async function prepareMessage(event: Event) {
 
     <section class="section journey-section" aria-labelledby="journey-title">
       <div class="container">
-        <div class="journey-heading">
+        <div class="journey-heading" data-reveal>
           <p class="eyebrow"><span></span> Sua jornada de cuidado</p>
-          <h2 id="journey-title">Um caminho simples, <em>construído com você.</em></h2>
+          <h2 id="journey-title">Um caminho simples, <em>construído com você</em></h2>
         </div>
-        <ol class="journey-list">
+        <ol class="journey-list" data-reveal>
           <li>
             <span>01</span>
-            <div><strong>Avaliação e escuta</strong><p>Entendemos seu momento, suas necessidades e o que você busca para o sorriso.</p></div>
+            <div><strong>Avaliação e escuta</strong><p>Entendemos seu momento, suas necessidades e o que você busca para o sorriso</p></div>
           </li>
           <li>
             <span>02</span>
-            <div><strong>Planejamento claro</strong><p>As possibilidades são apresentadas com linguagem simples, etapas e cuidados envolvidos.</p></div>
+            <div><strong>Planejamento claro</strong><p>As possibilidades são apresentadas com linguagem simples, etapas e cuidados envolvidos</p></div>
           </li>
           <li>
             <span>03</span>
-            <div><strong>Cuidado e acompanhamento</strong><p>O tratamento segue o plano definido, com atenção ao conforto e à evolução clínica.</p></div>
+            <div><strong>Cuidado e acompanhamento</strong><p>O tratamento segue o plano definido, com atenção ao conforto e à evolução clínica</p></div>
           </li>
         </ol>
       </div>
@@ -318,15 +403,15 @@ async function prepareMessage(event: Event) {
 
     <section id="duvidas" class="section faq-section" aria-labelledby="faq-title">
       <div class="container faq-grid">
-        <div class="faq-intro">
+        <div class="faq-intro" data-reveal="left">
           <p class="eyebrow"><span></span> Dúvidas frequentes</p>
-          <h2 id="faq-title">Informação também faz parte do <em>cuidado.</em></h2>
-          <p>Respostas iniciais para você chegar à avaliação com mais tranquilidade.</p>
+          <h2 id="faq-title">Informação também faz parte do <em>cuidado</em></h2>
+          <p>Respostas iniciais para você chegar à avaliação com mais tranquilidade</p>
           <a class="text-link text-link-gold" href="#agendamento">
             Quero fazer uma pergunta <ArrowRight :size="18" aria-hidden="true" />
           </a>
         </div>
-        <div class="faq-list">
+        <div class="faq-list" data-reveal="right">
           <details v-for="(faq, index) in faqs" :key="faq.question" :open="index === 0">
             <summary><span>0{{ index + 1 }}</span>{{ faq.question }}<i aria-hidden="true"></i></summary>
             <p>{{ faq.answer }}</p>
@@ -338,29 +423,33 @@ async function prepareMessage(event: Event) {
     <section id="agendamento" class="section booking-section" aria-labelledby="booking-title">
       <div class="booking-orbit" aria-hidden="true"></div>
       <div class="container booking-grid">
-        <div class="booking-copy">
-          <p class="eyebrow"><span></span> Comece por uma conversa</p>
-          <h2 id="booking-title">Seu próximo sorriso pode começar <em>agora.</em></h2>
+        <div class="booking-copy" data-reveal="left">
+          <p class="eyebrow"><span></span> Atendimento pelo WhatsApp</p>
+          <h2 id="booking-title">Conte o que você precisa e fale <em>com a recepção</em></h2>
           <p>
-            Preencha os campos para preparar um pedido de avaliação. Nenhum dado é enviado ou armazenado por este site.
+            Preencha as informações, principalmente se deseja começar ou continuar um atendimento com aparelho. A recepção receberá seu pedido já identificado para atendimento com o Dr. Edrey
           </p>
           <div class="booking-assurance">
             <MessageCircle :size="22" aria-hidden="true" />
-            <span><strong>Mensagem pronta para compartilhar</strong>Você escolhe por qual aplicativo deseja enviá-la.</span>
+            <span>
+              <strong>Recepção da clínica pelo WhatsApp</strong>
+              <a :href="whatsappLink" target="_blank" rel="noopener noreferrer">+55 94 9221-1681</a>
+            </span>
           </div>
         </div>
 
-        <form class="booking-form" @submit.prevent="prepareMessage">
+        <form class="booking-form" data-reveal="right" @submit.prevent="sendToWhatsApp">
           <label for="name">Como podemos chamar você?</label>
           <input id="name" name="name" type="text" autocomplete="name" placeholder="Seu nome" required />
 
-          <label for="interest">Sobre o que você quer conversar?</label>
-          <select id="interest" name="interest" required>
-            <option value="" disabled selected>Selecione um tratamento</option>
-            <option v-for="treatment in treatments" :key="treatment.title" :value="treatment.title.toLowerCase()">
-              {{ treatment.title }}
-            </option>
-            <option value="uma avaliação geral">Avaliação geral</option>
+          <label for="orthodontic-need">Como podemos ajudar?</label>
+          <select id="orthodontic-need" name="orthodonticNeed" required>
+            <option value="" disabled selected>Selecione uma opção</option>
+            <option value="Quero começar um atendimento com aparelho">Quero começar um atendimento com aparelho</option>
+            <option value="Quero continuar meu atendimento com aparelho">Quero continuar meu atendimento com aparelho</option>
+            <option value="Já uso aparelho e preciso de manutenção ou avaliação">Preciso de manutenção ou avaliação do aparelho</option>
+            <option value="Quero retomar um tratamento ortodôntico interrompido">Quero retomar um tratamento interrompido</option>
+            <option value="Quero conversar sobre outro tratamento odontológico">Outro tratamento odontológico</option>
           </select>
 
           <label for="period">Qual período costuma ser melhor?</label>
@@ -371,12 +460,21 @@ async function prepareMessage(event: Event) {
             <option value="da noite">Noite</option>
           </select>
 
+          <label for="details">Conte um pouco mais sobre o que você precisa</label>
+          <textarea
+            id="details"
+            name="details"
+            rows="4"
+            placeholder="Ex.: já uso aparelho há dois anos e quero continuar o acompanhamento…"
+            required
+          ></textarea>
+
           <button class="button form-submit" type="submit">
-            Preparar mensagem <ArrowRight :size="18" aria-hidden="true" />
+            Enviar informações no WhatsApp <MessageCircle :size="18" aria-hidden="true" />
           </button>
           <p v-if="formStatus" class="form-status" role="status" aria-live="polite">{{ formStatus }}</p>
           <p class="form-note">
-            Em caso de dor intensa, trauma, sangramento persistente ou inchaço importante, procure atendimento odontológico de urgência.
+            O WhatsApp abrirá com a mensagem preenchida. Revise as informações e toque em enviar. Em caso de urgência odontológica, procure atendimento imediato.
           </p>
         </form>
       </div>
@@ -384,12 +482,21 @@ async function prepareMessage(event: Event) {
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-top">
+    <div class="container footer-top" data-reveal>
       <a class="brand footer-brand" href="#inicio" aria-label="Voltar ao início">
         <img class="brand-logo" src="/logo-edrey-transparent.png" alt="Dr. Edrey Mundoco, cirurgião-dentista" loading="lazy" />
       </a>
-      <p>Cuidado que começa na escuta e se revela em cada sorriso.</p>
-      <a class="button button-small" href="#agendamento">Agendar avaliação</a>
+      <p>Cuidado que começa na escuta e se revela em cada sorriso · CRO/PA 13457</p>
+      <div class="footer-actions">
+        <a class="button button-small" :href="whatsappLink" target="_blank" rel="noopener noreferrer">
+          <MessageCircle :size="16" aria-hidden="true" />
+          WhatsApp
+        </a>
+        <a class="button button-small instagram-button" :href="instagramLink" target="_blank" rel="noopener noreferrer">
+          <Camera :size="16" aria-hidden="true" />
+          Instagram
+        </a>
+      </div>
     </div>
     <div class="container footer-bottom">
       <p>© 2026 Dr. Edrey Mundoco.</p>
@@ -397,4 +504,15 @@ async function prepareMessage(event: Event) {
       <a href="#inicio">Voltar ao topo ↑</a>
     </div>
   </footer>
+
+  <a
+    class="whatsapp-float"
+    :href="whatsappLink"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Solicitar à recepção da clínica um atendimento com o Dr. Edrey"
+  >
+    <MessageCircle :size="21" aria-hidden="true" />
+    <span>WhatsApp</span>
+  </a>
 </template>
