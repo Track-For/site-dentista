@@ -30,6 +30,7 @@ let revealObserver: IntersectionObserver | null = null
 let scrollAnimationFrame: number | null = null
 let removeScrollListener: (() => void) | null = null
 let introTimer: number | null = null
+let introUnlockTimer: number | null = null
 
 const treatments = [
   {
@@ -103,8 +104,11 @@ function toggleTreatment(index: number) {
 function finishIntro() {
   if (!showIntro.value) return
   showIntro.value = false
-  document.body.classList.remove('intro-playing')
   document.documentElement.classList.add('cinematic-ready')
+  introUnlockTimer = window.setTimeout(() => {
+    document.body.classList.remove('intro-playing')
+    introUnlockTimer = null
+  }, 900)
   if (introTimer !== null) {
     window.clearTimeout(introTimer)
     introTimer = null
@@ -141,7 +145,7 @@ onMounted(() => {
   } else {
     document.body.classList.add('intro-playing')
     window.addEventListener('keydown', handleIntroKeydown)
-    introTimer = window.setTimeout(finishIntro, 1900)
+    introTimer = window.setTimeout(finishIntro, 1950)
   }
   updateScrollMotion()
   window.addEventListener('scroll', scheduleScrollMotion, { passive: true })
@@ -175,6 +179,7 @@ onBeforeUnmount(() => {
   removeScrollListener?.()
   if (scrollAnimationFrame !== null) window.cancelAnimationFrame(scrollAnimationFrame)
   if (introTimer !== null) window.clearTimeout(introTimer)
+  if (introUnlockTimer !== null) window.clearTimeout(introUnlockTimer)
   window.removeEventListener('keydown', handleIntroKeydown)
   document.body.classList.remove('intro-playing')
   document.documentElement.classList.remove('motion-ready', 'cinematic-ready')
