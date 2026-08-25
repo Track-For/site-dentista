@@ -1,261 +1,89 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import {
-  Activity,
-  ArrowDownRight,
-  ArrowRight,
-  CalendarDays,
-  Camera,
-  Check,
-  ClipboardCheck,
-  HeartHandshake,
-  Menu,
-  MessageCircle,
-  ShieldCheck,
-  Smile,
-  Sparkles,
-  SunMedium,
-  WandSparkles,
-  X,
-} from '@lucide/vue'
+import { ArrowRight, CalendarDays, Check, HeartHandshake, Menu, MessageCircle, ShieldCheck, Smile, Sparkles, WandSparkles, X } from '@lucide/vue'
 
 const menuOpen = ref(false)
-const activeTreatment = ref<number | null>(0)
+const activeService = ref<number | null>(0)
 const formStatus = ref('')
-const showIntro = ref(true)
-const whatsappNumber = '559492211681'
-const whatsappLink = `https://wa.me/${whatsappNumber}`
-const instagramLink = 'https://www.instagram.com/dr.edreymundoco/'
 let revealObserver: IntersectionObserver | null = null
-let scrollAnimationFrame: number | null = null
-let removeScrollListener: (() => void) | null = null
-let introTimer: number | null = null
-let introUnlockTimer: number | null = null
 
-const treatments = [
-  {
-    title: 'Ortodontia e aparelhos',
-    description: 'Avaliação para quem quer começar, continuar ou retomar o tratamento com aparelho, com planejamento e acompanhamento individualizado',
-    icon: Smile,
-  },
-  {
-    title: 'Clareamento dental',
-    description: 'Um plano supervisionado para devolver luminosidade ao sorriso com segurança e naturalidade',
-    icon: Sparkles,
-  },
-  {
-    title: 'Restaurações estéticas',
-    description: 'Recuperação de forma, função e harmonia com materiais que se integram ao seu sorriso',
-    icon: WandSparkles,
-  },
-  {
-    title: 'Prótese dentária',
-    description: 'Soluções planejadas para restaurar conforto, confiança e qualidade na mastigação',
-    icon: ShieldCheck,
-  },
-  {
-    title: 'Tratamento de canal',
-    description: 'Cuidado criterioso para preservar o dente e aliviar o desconforto, respeitando cada etapa clínica',
-    icon: Activity,
-  },
-  {
-    title: 'Limpeza preventiva',
-    description: 'Prevenção e acompanhamento para manter dentes e gengivas saudáveis ao longo do tempo',
-    icon: SunMedium,
-  },
-  {
-    title: 'Extrações',
-    description: 'Avaliação responsável e procedimento conduzido com atenção ao conforto e à recuperação',
-    icon: Check,
-  },
+const services = [
+  { title: 'Facetas em resina', description: 'Planejamento cuidadoso de forma, proporção e textura para um sorriso harmônico, sempre respeitando suas características.', icon: Sparkles },
+  { title: 'Clareamento dental', description: 'Clareamento supervisionado e indicado de forma individual, com atenção à saúde, à sensibilidade e a um resultado natural.', icon: WandSparkles },
+  { title: 'Restaurações estéticas', description: 'Reconstruções que devolvem função e beleza aos dentes com materiais pensados para se integrar ao sorriso.', icon: ShieldCheck },
+  { title: 'Recontorno estético', description: 'Ajustes delicados de contorno e proporção quando indicados, valorizando o equilíbrio entre os dentes e o rosto.', icon: Smile },
+  { title: 'Planejamento do sorriso', description: 'Uma avaliação completa para entender prioridades, possibilidades e construir um plano coerente com você.', icon: HeartHandshake },
+  { title: 'Manutenção preventiva', description: 'Acompanhamento para preservar saúde, conforto e longevidade dos tratamentos estéticos realizados.', icon: Check },
 ]
 
 const faqs = [
-  {
-    question: 'Como funciona a primeira avaliação?',
-    answer:
-      'A consulta começa com uma conversa sobre suas necessidades e expectativas. Depois da avaliação clínica, você recebe uma explicação clara sobre os possíveis caminhos de cuidado',
-  },
-  {
-    question: 'Qual tratamento é o mais indicado para mim?',
-    answer:
-      'A indicação depende da avaliação individual. O objetivo é compreender sua saúde bucal, suas prioridades e construir um plano coerente com o seu momento',
-  },
-  {
-    question: 'Posso tirar dúvidas antes de decidir?',
-    answer:
-      'Sim. Decisões bem informadas fazem parte do atendimento. Benefícios, etapas e cuidados são explicados antes do início de qualquer tratamento.',
-  },
-  {
-    question: 'Como devo agir em uma urgência odontológica?',
-    answer:
-      'Dor intensa, trauma, sangramento persistente ou inchaço importante pedem avaliação rápida. Procure um serviço odontológico de urgência disponível na sua região.',
-  },
+  { question: 'Como funciona a primeira consulta?', answer: 'A consulta começa com uma conversa sobre o que incomoda você e o que espera do tratamento. Depois da avaliação clínica, as possibilidades são explicadas com clareza e sem decisões apressadas.' },
+  { question: 'O resultado fica natural?', answer: 'A naturalidade orienta todo o planejamento. Forma, cor e proporção são avaliadas em conjunto para que qualquer mudança converse com o seu rosto e preserve a sua identidade.' },
+  { question: 'Faceta em resina é indicada para todos?', answer: 'Não. A indicação depende da saúde bucal, da estrutura dos dentes e dos objetivos de cada pessoa. A avaliação individual é indispensável para definir a opção mais adequada.' },
+  { question: 'Quanto tempo dura um tratamento estético?', answer: 'O prazo varia conforme o procedimento e a complexidade do caso. Após a avaliação, você recebe uma orientação sobre etapas, cuidados e acompanhamento necessário.' },
 ]
 
-function closeMenu() {
-  menuOpen.value = false
-}
+function closeMenu() { menuOpen.value = false }
+function toggleService(index: number) { activeService.value = activeService.value === index ? null : index }
 
-function toggleTreatment(index: number) {
-  activeTreatment.value = index
-}
-
-function finishIntro() {
-  if (!showIntro.value) return
-  showIntro.value = false
-  document.documentElement.classList.add('cinematic-ready')
-  introUnlockTimer = window.setTimeout(() => {
-    document.body.classList.remove('intro-playing')
-    introUnlockTimer = null
-  }, 900)
-  if (introTimer !== null) {
-    window.clearTimeout(introTimer)
-    introTimer = null
-  }
-}
-
-function handleIntroKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') finishIntro()
-}
-
-onMounted(() => {
-  const revealElements = document.querySelectorAll<HTMLElement>('[data-reveal], [data-cinematic-section]')
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-  const updateScrollMotion = () => {
-    const scrollableHeight = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1)
-    const progress = Math.min(window.scrollY / scrollableHeight, 1)
-    const heroParallax = Math.min(window.scrollY * 0.075, 44)
-
-    document.documentElement.style.setProperty('--page-progress', String(progress))
-    document.documentElement.style.setProperty('--hero-parallax', `${heroParallax}px`)
-    scrollAnimationFrame = null
-  }
-
-  const scheduleScrollMotion = () => {
-    if (scrollAnimationFrame !== null) return
-    scrollAnimationFrame = window.requestAnimationFrame(updateScrollMotion)
-  }
-
-  document.documentElement.classList.add('motion-ready')
-  if (prefersReducedMotion) {
-    showIntro.value = false
-    document.documentElement.classList.add('cinematic-ready')
-  } else {
-    document.body.classList.add('intro-playing')
-    window.addEventListener('keydown', handleIntroKeydown)
-    introTimer = window.setTimeout(finishIntro, 1950)
-  }
-  updateScrollMotion()
-  window.addEventListener('scroll', scheduleScrollMotion, { passive: true })
-  removeScrollListener = () => window.removeEventListener('scroll', scheduleScrollMotion)
-
-  if (prefersReducedMotion || !('IntersectionObserver' in window)) {
-    revealElements.forEach((element) => {
-      element.dataset.revealed = 'true'
-    })
-    return
-  }
-
-  revealObserver = new IntersectionObserver(
-    (entries, observer) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return
-        const element = entry.target as HTMLElement
-        element.dataset.revealed = 'true'
-        observer.unobserve(entry.target)
-      })
-    },
-    { threshold: 0.14, rootMargin: '0px 0px -8% 0px' },
-  )
-
-  revealElements.forEach((element) => revealObserver?.observe(element))
-
-})
-
-onBeforeUnmount(() => {
-  revealObserver?.disconnect()
-  removeScrollListener?.()
-  if (scrollAnimationFrame !== null) window.cancelAnimationFrame(scrollAnimationFrame)
-  if (introTimer !== null) window.clearTimeout(introTimer)
-  if (introUnlockTimer !== null) window.clearTimeout(introUnlockTimer)
-  window.removeEventListener('keydown', handleIntroKeydown)
-  document.body.classList.remove('intro-playing')
-  document.documentElement.classList.remove('motion-ready', 'cinematic-ready')
-})
-
-function sendToWhatsApp(event: Event) {
+async function prepareAppointment(event: Event) {
   const form = event.currentTarget as HTMLFormElement
   const data = new FormData(form)
   const name = String(data.get('name') || '').trim()
-  const orthodonticNeed = String(data.get('orthodonticNeed') || '').trim()
+  const interest = String(data.get('interest') || '').trim()
   const period = String(data.get('period') || '').trim()
   const details = String(data.get('details') || '').trim()
   const message = [
-    'Olá! Gostaria de solicitar um atendimento com o Dr. Edrey Mundoco.',
-    '',
-    'Profissional desejado: Dr. Edrey Mundoco',
-    `Nome: ${name}`,
-    `O que preciso: ${orthodonticNeed}`,
-    `Melhor período: ${period}`,
-    `Detalhes: ${details}`,
-  ].join('\n')
-  const whatsappUrl = `${whatsappLink}?text=${encodeURIComponent(message)}`
+    'Olá! Gostaria de solicitar uma avaliação com o Dr. Beto Filmari.', '',
+    `Nome: ${name}`, `Interesse: ${interest}`, `Melhor período: ${period}`,
+    details ? `Observação: ${details}` : '',
+  ].filter(Boolean).join('\n')
 
-  formStatus.value = 'Abrindo sua conversa no WhatsApp…'
-  const whatsappWindow = window.open(whatsappUrl, '_blank')
-  if (whatsappWindow) {
-    whatsappWindow.opener = null
-  } else {
-    window.location.href = whatsappUrl
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'Agendamento com Dr. Beto Filmari', text: message })
+      formStatus.value = 'Mensagem preparada. Agora é só escolher por onde enviar.'
+      return
+    }
+    await navigator.clipboard.writeText(message)
+    formStatus.value = 'Mensagem copiada. Cole no canal de atendimento do Dr. Beto.'
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return
+    formStatus.value = 'Não foi possível compartilhar agora. Revise os dados e tente novamente.'
   }
 }
+
+onMounted(() => {
+  const elements = document.querySelectorAll<HTMLElement>('[data-reveal]')
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+    elements.forEach((element) => { element.dataset.visible = 'true' })
+    return
+  }
+  revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      ;(entry.target as HTMLElement).dataset.visible = 'true'
+      observer.unobserve(entry.target)
+    })
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' })
+  elements.forEach((element) => revealObserver?.observe(element))
+})
+onBeforeUnmount(() => revealObserver?.disconnect())
 </script>
 
 <template>
-  <Transition name="cinematic-intro" appear>
-    <div v-if="showIntro" class="cinematic-intro" aria-hidden="true" @click="finishIntro">
-      <div class="intro-light"></div>
-      <div class="intro-content">
-        <p class="intro-overline">Uma experiência de cuidado</p>
-        <img src="/logo-edrey-mark.png" alt="" />
-        <p class="intro-name">Dr. Edrey <em>Mundoco</em></p>
-        <div class="intro-meta">
-          <span>01</span><i></i><span>03</span>
-          <small>Odontologia · precisão · presença</small>
-        </div>
-      </div>
-    </div>
-  </Transition>
-
-  <div class="film-grain" aria-hidden="true"></div>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
-
   <header class="site-header" @keydown.esc="closeMenu">
-    <span class="scroll-progress" aria-hidden="true"></span>
     <div class="container header-inner">
-      <a class="brand" href="#inicio" aria-label="Dr. Edrey Mundoco — início" @click="closeMenu">
-        <img class="brand-logo" src="/logo-edrey-transparent.png" alt="Dr. Edrey Mundoco, cirurgião-dentista" />
+      <a class="brand" href="#inicio" aria-label="Dr. Beto Filmari — início" @click="closeMenu">
+        <span class="brand-mark" aria-hidden="true">BF</span>
+        <span class="brand-copy"><strong>Dr. Beto Filmari</strong><small>Odontologia estética</small></span>
       </a>
-
-      <button
-        class="menu-toggle"
-        type="button"
-        :aria-expanded="menuOpen"
-        aria-controls="main-navigation"
-        :aria-label="menuOpen ? 'Fechar menu' : 'Abrir menu'"
-        @click="menuOpen = !menuOpen"
-      >
-        <X v-if="menuOpen" :size="22" aria-hidden="true" />
-        <Menu v-else :size="22" aria-hidden="true" />
+      <button class="menu-toggle" type="button" :aria-expanded="menuOpen" aria-controls="main-navigation" :aria-label="menuOpen ? 'Fechar menu' : 'Abrir menu'" @click="menuOpen = !menuOpen">
+        <X v-if="menuOpen" :size="22" aria-hidden="true" /><Menu v-else :size="22" aria-hidden="true" />
       </button>
-
       <nav id="main-navigation" class="main-nav" :class="{ 'is-open': menuOpen }" aria-label="Principal">
-        <a href="#inicio" @click="closeMenu">Início</a>
-        <a href="#tratamentos" @click="closeMenu">Tratamentos</a>
-        <a href="#sobre" @click="closeMenu">Quem sou</a>
-        <a href="#duvidas" @click="closeMenu">Dúvidas</a>
+        <a href="#inicio" @click="closeMenu">Início</a><a href="#tratamentos" @click="closeMenu">Tratamentos</a><a href="#sobre" @click="closeMenu">Sobre</a><a href="#duvidas" @click="closeMenu">Dúvidas</a>
         <a class="button button-small" href="#agendamento" @click="closeMenu">Agendar avaliação</a>
       </nav>
     </div>
@@ -263,310 +91,101 @@ function sendToWhatsApp(event: Event) {
 
   <main id="conteudo">
     <section id="inicio" class="hero" aria-labelledby="hero-title">
-      <div class="hero-aurora" aria-hidden="true"></div>
-      <div class="hero-light-beam" aria-hidden="true"></div>
-      <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
-      <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
+      <div class="hero-wash" aria-hidden="true"></div>
       <div class="container hero-grid">
-        <div class="hero-copy" data-reveal="left">
-          <p class="eyebrow"><span></span> Odontologia com cuidado e precisão</p>
-          <h1 id="hero-title">
-            <span class="headline-line"><span>Seu sorriso merece</span></span>
-            <span class="headline-line"><span>um cuidado à altura</span></span>
-            <span class="headline-line"><span><em>da sua história</em></span></span>
-          </h1>
-          <p class="hero-lead">
-            Um atendimento próximo, transparente e planejado para você se sentir seguro em cada decisão
-          </p>
+        <div class="hero-copy" data-reveal>
+          <p class="eyebrow"><span></span> Odontologia estética em Goiânia</p>
+          <h1 id="hero-title">Transformando sorrisos com <em>naturalidade.</em></h1>
+          <p class="hero-lead">Cuidado estético com escuta, planejamento e respeito ao que faz o seu sorriso ser único.</p>
           <div class="hero-actions">
-            <a class="button" href="#agendamento">
-              <CalendarDays :size="18" aria-hidden="true" />
-              Agendar avaliação
-            </a>
-            <a class="text-link" href="#tratamentos">
-              Conhecer tratamentos
-              <ArrowDownRight :size="18" aria-hidden="true" />
-            </a>
+            <a class="button" href="#agendamento"><CalendarDays :size="18" aria-hidden="true" />Quero agendar uma avaliação</a>
+            <a class="text-link" href="#tratamentos">Conhecer tratamentos <ArrowRight :size="18" aria-hidden="true" /></a>
           </div>
-          <div class="hero-note" aria-label="Diferenciais do atendimento">
-            <span>Escuta atenta</span>
-            <span>Plano individual</span>
-            <span>Acompanhamento</span>
+          <div class="credentials" aria-label="Informações profissionais">
+            <span><ShieldCheck :size="17" aria-hidden="true" /> Dentista · CRO-GO 22.429</span><span>Goiânia · GO</span>
           </div>
         </div>
-
-        <div class="hero-portrait-wrap" data-reveal="right">
-          <div class="portrait-glow" aria-hidden="true"></div>
-          <span class="portrait-spark portrait-spark-one" aria-hidden="true"></span>
-          <span class="portrait-spark portrait-spark-two" aria-hidden="true"></span>
-          <div class="hero-portrait">
-            <img
-              src="/edrey-retrato.png"
-              alt="Dr. Edrey Mundoco em retrato profissional"
-              width="1080"
-              height="1610"
-              decoding="async"
-            />
-          </div>
-          <div class="portrait-caption">
-            <img class="caption-logo-mark" src="/logo-edrey-mark.png" alt="" aria-hidden="true" />
-            <p><strong>Dr. Edrey Mundoco</strong><small>Cirurgião-dentista</small></p>
-          </div>
+        <div class="portrait-wrap" data-reveal>
+          <div class="portrait-frame"><img src="/beto-filmari.png" alt="Dr. Beto Filmari sorrindo em retrato profissional" width="289" height="423" decoding="async" /></div>
+          <div class="portrait-card"><span class="mini-mark" aria-hidden="true">BF</span><p><strong>Dr. Beto Filmari</strong><small>Dentista · CRO-GO 22.429</small></p></div>
+          <p class="portrait-note"><Sparkles :size="16" aria-hidden="true" /> Estética que preserva a sua identidade</p>
         </div>
-        <a class="hero-scroll-cue" href="#tratamentos" aria-label="Rolar para conhecer os tratamentos">
-          <span aria-hidden="true"></span>
-          Role para descobrir
-        </a>
       </div>
     </section>
 
-    <section class="trust-strip" aria-label="Compromissos do atendimento">
-      <div class="container trust-grid" data-reveal>
-        <p><span>01</span> Atendimento individualizado</p>
-        <p><span>02</span> Planejamento transparente</p>
-        <p><span>03</span> Cuidado em cada etapa</p>
+    <section class="principles" aria-label="Princípios do atendimento">
+      <div class="container principles-grid" data-reveal>
+        <p><span>01</span><strong>Naturalidade</strong><small>Resultados que conversam com você</small></p>
+        <p><span>02</span><strong>Planejamento</strong><small>Cada detalhe pensado em conjunto</small></p>
+        <p><span>03</span><strong>Cuidado</strong><small>Clareza antes, durante e depois</small></p>
       </div>
     </section>
 
-    <section id="tratamentos" class="section treatments-section" aria-labelledby="treatments-title" data-cinematic-section>
+    <section id="tratamentos" class="section services-section" aria-labelledby="services-title">
       <div class="container">
-        <div class="section-heading" data-reveal>
-          <div>
-            <p class="eyebrow"><span></span> Tratamentos</p>
-            <h2 id="treatments-title">Cuidado completo para a saúde e a <em>estética do sorriso</em></h2>
-          </div>
-          <p>
-            Atenção especial para quem deseja iniciar, continuar ou retomar o tratamento com aparelho, além de cuidados completos para o sorriso
-          </p>
-        </div>
-
-        <div class="treatments-grid">
-          <article
-            v-for="(treatment, index) in treatments"
-            :key="treatment.title"
-            class="treatment-card"
-            :class="{ 'is-active': activeTreatment === index }"
-            data-reveal
-          >
-            <button
-              type="button"
-              :aria-expanded="activeTreatment === index"
-              :aria-controls="`treatment-${index}`"
-              @click="toggleTreatment(index)"
-            >
-              <span class="treatment-icon"><component :is="treatment.icon" :size="22" aria-hidden="true" /></span>
-              <span class="treatment-number">0{{ index + 1 }}</span>
-              <strong>{{ treatment.title }}</strong>
-              <ArrowRight class="treatment-arrow" :size="20" aria-hidden="true" />
+        <div class="section-heading" data-reveal><div><p class="eyebrow"><span></span> Tratamentos estéticos</p><h2 id="services-title">Possibilidades para sorrir com mais <em>confiança</em></h2></div><p>Todo tratamento começa com uma avaliação individual. O objetivo não é criar um sorriso padrão, mas encontrar equilíbrio para o seu caso.</p></div>
+        <div class="services-grid">
+          <article v-for="(service, index) in services" :key="service.title" class="service-card" :class="{ 'is-active': activeService === index }" data-reveal>
+            <button type="button" :aria-expanded="activeService === index" :aria-controls="`service-${index}`" @click="toggleService(index)">
+              <span class="service-icon"><component :is="service.icon" :size="21" aria-hidden="true" /></span><small>0{{ index + 1 }}</small><strong>{{ service.title }}</strong><span class="card-action" aria-hidden="true">{{ activeService === index ? '−' : '+' }}</span>
             </button>
-            <div
-              :id="`treatment-${index}`"
-              class="treatment-detail"
-              :class="{ 'is-open': activeTreatment === index }"
-              :aria-hidden="activeTreatment !== index"
-            >
-              <div class="treatment-detail-inner">
-                <p>{{ treatment.description }}</p>
-                <a href="#agendamento" :tabindex="activeTreatment === index ? 0 : -1">
-                  Conversar sobre este cuidado <ArrowRight :size="15" aria-hidden="true" />
-                </a>
-              </div>
-            </div>
+            <div :id="`service-${index}`" class="service-detail" :class="{ 'is-open': activeService === index }" :aria-hidden="activeService !== index"><div><p>{{ service.description }}</p><a href="#agendamento" :tabindex="activeService === index ? 0 : -1">Quero conversar sobre isso <ArrowRight :size="15" aria-hidden="true" /></a></div></div>
           </article>
         </div>
-
-        <div class="section-cta" data-reveal>
-          <p><strong>Não sabe por onde começar?</strong> <span>A avaliação é o primeiro passo para um plano realmente seu</span></p>
-          <a class="button button-outline" href="#agendamento">Quero cuidar do meu sorriso</a>
-        </div>
       </div>
     </section>
 
-    <section id="sobre" class="section about-section" aria-labelledby="about-title" data-cinematic-section>
+    <section id="sobre" class="section about-section" aria-labelledby="about-title">
       <div class="container about-grid">
-        <div class="about-visual" data-reveal="left">
-          <div class="about-image">
-            <img
-              src="/edrey-retrato.png"
-              alt="Retrato profissional do Dr. Edrey Mundoco"
-              width="1080"
-              height="1610"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <p class="image-label">
-            <img class="caption-logo-mark" src="/logo-edrey-mark.png" alt="" aria-hidden="true" loading="lazy" />
-            Presença, técnica e atenção aos detalhes
-          </p>
-        </div>
-
-        <div class="about-copy" data-reveal="right">
-          <p class="eyebrow"><span></span> Quem sou</p>
-          <h2 id="about-title">Sou o Dr. Edrey Mundoco e acredito em um cuidado <em>próximo e bem explicado</em></h2>
-          <p class="about-lead">
-            Sou cirurgião-dentista, formado pela Faculdade Integrada Carajás (FIC), e meu atendimento começa pela escuta. Recebo pacientes que desejam iniciar, continuar ou retomar o tratamento com aparelho, sempre com avaliação individual e um plano claro para cada etapa
-          </p>
-          <div class="professional-register">
-            <ShieldCheck :size="24" aria-hidden="true" />
-            <p><small>Registro profissional</small><strong>CRO/PA 13457</strong></p>
-          </div>
+        <div class="about-photo" data-reveal><img src="/beto-filmari.png" alt="Dr. Beto Filmari, dentista em Goiânia" width="289" height="423" loading="lazy" decoding="async" /><span aria-hidden="true">BF</span></div>
+        <div class="about-copy" data-reveal>
+          <p class="eyebrow"><span></span> Dr. Beto Filmari</p><h2 id="about-title">Seu sorriso pode mudar sem deixar de ser <em>seu.</em></h2>
+          <p class="about-lead">A odontologia estética ganha sentido quando técnica e sensibilidade caminham juntas. Por isso, cada atendimento parte de uma conversa franca sobre expectativas, possibilidades e limites.</p>
           <div class="about-points">
-            <div>
-              <HeartHandshake :size="22" aria-hidden="true" />
-              <p><strong>Acolhimento de verdade</strong><span>Espaço para falar sobre expectativas, dúvidas e receios</span></p>
-            </div>
-            <div>
-              <ClipboardCheck :size="22" aria-hidden="true" />
-              <p><strong>Decisões bem explicadas</strong><span>Orientação simples para você participar do próprio tratamento</span></p>
-            </div>
-            <div>
-              <ShieldCheck :size="22" aria-hidden="true" />
-              <p><strong>Cuidado responsável</strong><span>Planejamento atento à função, à saúde e à naturalidade do sorriso</span></p>
-            </div>
+            <div><HeartHandshake :size="22" aria-hidden="true" /><p><strong>Escuta antes da escolha</strong><span>Entender o que você busca é o primeiro passo do planejamento.</span></p></div>
+            <div><Smile :size="22" aria-hidden="true" /><p><strong>Beleza sem excessos</strong><span>Proporção, função e naturalidade orientam cada decisão.</span></p></div>
+            <div><ShieldCheck :size="22" aria-hidden="true" /><p><strong>Informação transparente</strong><span>Você conhece as etapas e os cuidados antes de começar.</span></p></div>
           </div>
-          <a class="text-link text-link-gold" href="#agendamento">
-            Agendar uma conversa <ArrowRight :size="18" aria-hidden="true" />
-          </a>
+          <div class="register"><small>Registro profissional</small><strong>CRO-GO 22.429</strong></div>
         </div>
       </div>
     </section>
 
-    <section class="section journey-section" aria-labelledby="journey-title" data-cinematic-section>
-      <div class="container">
-        <div class="journey-heading" data-reveal>
-          <p class="eyebrow"><span></span> Sua jornada de cuidado</p>
-          <h2 id="journey-title">Um caminho simples, <em>construído com você</em></h2>
-        </div>
+    <section class="section journey-section" aria-labelledby="journey-title">
+      <div class="container"><div class="journey-heading" data-reveal><p class="eyebrow light"><span></span> Sua jornada</p><h2 id="journey-title">Um processo claro, do primeiro olhar ao <em>acompanhamento</em></h2></div>
         <ol class="journey-list" data-reveal>
-          <li>
-            <span>01</span>
-            <div><strong>Avaliação e escuta</strong><p>Entendemos seu momento, suas necessidades e o que você busca para o sorriso</p></div>
-          </li>
-          <li>
-            <span>02</span>
-            <div><strong>Planejamento claro</strong><p>As possibilidades são apresentadas com linguagem simples, etapas e cuidados envolvidos</p></div>
-          </li>
-          <li>
-            <span>03</span>
-            <div><strong>Cuidado e acompanhamento</strong><p>O tratamento segue o plano definido, com atenção ao conforto e à evolução clínica</p></div>
-          </li>
+          <li><span>01</span><div><strong>Conversa e avaliação</strong><p>Entendemos seu sorriso, suas prioridades e sua saúde bucal.</p></div></li>
+          <li><span>02</span><div><strong>Planejamento individual</strong><p>As possibilidades são apresentadas com clareza e sem fórmulas prontas.</p></div></li>
+          <li><span>03</span><div><strong>Cuidado e revisão</strong><p>O tratamento segue com atenção aos detalhes e orientação de manutenção.</p></div></li>
         </ol>
       </div>
     </section>
 
-    <section id="duvidas" class="section faq-section" aria-labelledby="faq-title" data-cinematic-section>
+    <section id="duvidas" class="section faq-section" aria-labelledby="faq-title">
       <div class="container faq-grid">
-        <div class="faq-intro" data-reveal="left">
-          <p class="eyebrow"><span></span> Dúvidas frequentes</p>
-          <h2 id="faq-title">Informação também faz parte do <em>cuidado</em></h2>
-          <p>Respostas iniciais para você chegar à avaliação com mais tranquilidade</p>
-          <a class="text-link text-link-gold" href="#agendamento">
-            Quero fazer uma pergunta <ArrowRight :size="18" aria-hidden="true" />
-          </a>
-        </div>
-        <div class="faq-list" data-reveal="right">
-          <details v-for="(faq, index) in faqs" :key="faq.question" :open="index === 0">
-            <summary><span>0{{ index + 1 }}</span>{{ faq.question }}<i aria-hidden="true"></i></summary>
-            <p>{{ faq.answer }}</p>
-          </details>
-        </div>
+        <div class="faq-intro" data-reveal><p class="eyebrow"><span></span> Dúvidas frequentes</p><h2 id="faq-title">Informação também faz parte do <em>cuidado.</em></h2><p>Algumas respostas iniciais para você chegar à consulta com mais tranquilidade.</p><a class="text-link" href="#agendamento">Ainda tenho uma dúvida <ArrowRight :size="18" aria-hidden="true" /></a></div>
+        <div class="faq-list" data-reveal><details v-for="(faq, index) in faqs" :key="faq.question" :open="index === 0"><summary><span>0{{ index + 1 }}</span>{{ faq.question }}<i aria-hidden="true"></i></summary><p>{{ faq.answer }}</p></details></div>
       </div>
     </section>
 
-    <section id="agendamento" class="section booking-section" aria-labelledby="booking-title" data-cinematic-section>
-      <div class="booking-orbit" aria-hidden="true"></div>
+    <section id="agendamento" class="section booking-section" aria-labelledby="booking-title">
       <div class="container booking-grid">
-        <div class="booking-copy" data-reveal="left">
-          <p class="eyebrow"><span></span> Atendimento pelo WhatsApp</p>
-          <h2 id="booking-title">Conte o que você precisa e fale <em>com a recepção</em></h2>
-          <p>
-            Preencha as informações, principalmente se deseja começar ou continuar um atendimento com aparelho. A recepção receberá seu pedido já identificado para atendimento com o Dr. Edrey
-          </p>
-          <div class="booking-assurance">
-            <MessageCircle :size="22" aria-hidden="true" />
-            <span>
-              <strong>Recepção da clínica pelo WhatsApp</strong>
-              <a :href="whatsappLink" target="_blank" rel="noopener noreferrer">+55 94 9221-1681</a>
-            </span>
-          </div>
-        </div>
-
-        <form class="booking-form" data-reveal="right" @submit.prevent="sendToWhatsApp">
-          <label for="name">Como podemos chamar você?</label>
-          <input id="name" name="name" type="text" autocomplete="name" placeholder="Seu nome" required />
-
-          <label for="orthodontic-need">Como podemos ajudar?</label>
-          <select id="orthodontic-need" name="orthodonticNeed" required>
-            <option value="" disabled selected>Selecione uma opção</option>
-            <option value="Quero começar um atendimento com aparelho">Quero começar um atendimento com aparelho</option>
-            <option value="Quero continuar meu atendimento com aparelho">Quero continuar meu atendimento com aparelho</option>
-            <option value="Já uso aparelho e preciso de manutenção ou avaliação">Preciso de manutenção ou avaliação do aparelho</option>
-            <option value="Quero retomar um tratamento ortodôntico interrompido">Quero retomar um tratamento interrompido</option>
-            <option value="Quero conversar sobre outro tratamento odontológico">Outro tratamento odontológico</option>
-          </select>
-
-          <label for="period">Qual período costuma ser melhor?</label>
-          <select id="period" name="period" required>
-            <option value="" disabled selected>Selecione um período</option>
-            <option value="da manhã">Manhã</option>
-            <option value="da tarde">Tarde</option>
-            <option value="da noite">Noite</option>
-          </select>
-
-          <label for="details">Conte um pouco mais sobre o que você precisa</label>
-          <textarea
-            id="details"
-            name="details"
-            rows="4"
-            placeholder="Ex.: já uso aparelho há dois anos e quero continuar o acompanhamento…"
-            required
-          ></textarea>
-
-          <button class="button form-submit" type="submit">
-            Enviar informações no WhatsApp <MessageCircle :size="18" aria-hidden="true" />
-          </button>
-          <p v-if="formStatus" class="form-status" role="status" aria-live="polite">{{ formStatus }}</p>
-          <p class="form-note">
-            O WhatsApp abrirá com a mensagem preenchida. Revise as informações e toque em enviar. Em caso de urgência odontológica, procure atendimento imediato.
-          </p>
+        <div class="booking-copy" data-reveal><p class="eyebrow light"><span></span> Solicite uma avaliação</p><h2 id="booking-title">O próximo sorriso pode começar com uma <em>conversa.</em></h2><p>Preencha os dados para preparar uma mensagem de atendimento. Nenhuma informação é armazenada neste site.</p><div class="booking-location"><span>Goiânia</span><small>Atendimento presencial · Goiás</small></div></div>
+        <form class="booking-form" data-reveal @submit.prevent="prepareAppointment">
+          <label for="name">Seu nome</label><input id="name" name="name" type="text" autocomplete="name" placeholder="Como podemos chamar você?" required />
+          <label for="interest">O que você deseja avaliar?</label><select id="interest" name="interest" required><option value="" disabled selected>Selecione uma opção</option><option value="Facetas em resina">Facetas em resina</option><option value="Clareamento dental">Clareamento dental</option><option value="Restaurações estéticas">Restaurações estéticas</option><option value="Planejamento do sorriso">Planejamento do sorriso</option><option value="Ainda não sei — preciso de orientação">Ainda não sei — preciso de orientação</option></select>
+          <label for="period">Melhor período</label><select id="period" name="period" required><option value="" disabled selected>Selecione um período</option><option value="Manhã">Manhã</option><option value="Tarde">Tarde</option><option value="Noite">Noite</option></select>
+          <label for="details">Se quiser, conte um pouco mais</label><textarea id="details" name="details" rows="3" placeholder="Sua principal dúvida ou objetivo"></textarea>
+          <button class="button form-submit" type="submit">Preparar mensagem <MessageCircle :size="18" aria-hidden="true" /></button>
+          <p v-if="formStatus" class="form-status" role="status" aria-live="polite">{{ formStatus }}</p><p class="form-note">Conteúdo informativo. A indicação de qualquer procedimento depende de avaliação profissional.</p>
         </form>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-top" data-reveal>
-      <a class="brand footer-brand" href="#inicio" aria-label="Voltar ao início">
-        <img class="brand-logo" src="/logo-edrey-transparent.png" alt="Dr. Edrey Mundoco, cirurgião-dentista" loading="lazy" />
-      </a>
-      <p>Cuidado que começa na escuta e se revela em cada sorriso · CRO/PA 13457</p>
-      <div class="footer-actions">
-        <a class="button button-small" :href="whatsappLink" target="_blank" rel="noopener noreferrer">
-          <MessageCircle :size="16" aria-hidden="true" />
-          WhatsApp
-        </a>
-        <a class="button button-small instagram-button" :href="instagramLink" target="_blank" rel="noopener noreferrer">
-          <Camera :size="16" aria-hidden="true" />
-          Instagram
-        </a>
-      </div>
-    </div>
-    <div class="container footer-bottom">
-      <p>© 2026 Dr. Edrey Mundoco.</p>
-      <p>Conteúdo informativo. Avaliação profissional é indispensável.</p>
-      <a href="#inicio">Voltar ao topo ↑</a>
-    </div>
+    <div class="container footer-main"><a class="brand footer-brand" href="#inicio" aria-label="Dr. Beto Filmari — voltar ao início"><span class="brand-mark" aria-hidden="true">BF</span><span class="brand-copy"><strong>Dr. Beto Filmari</strong><small>Odontologia estética</small></span></a><p>Transformando sorrisos com naturalidade.</p><a class="button button-small" href="#agendamento"><CalendarDays :size="16" aria-hidden="true" /> Agendar avaliação</a></div>
+    <div class="container footer-bottom"><p>© 2026 Dr. Beto Filmari · CRO-GO 22.429</p><p>Goiânia · Goiás</p><a href="#inicio">Voltar ao topo ↑</a></div>
   </footer>
-
-  <a
-    class="whatsapp-float"
-    :href="whatsappLink"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Solicitar à recepção da clínica um atendimento com o Dr. Edrey"
-  >
-    <MessageCircle :size="21" aria-hidden="true" />
-    <span>WhatsApp</span>
-  </a>
+  <a class="floating-cta" href="#agendamento" aria-label="Ir para agendamento"><CalendarDays :size="19" aria-hidden="true" /><span>Agendar</span></a>
 </template>
