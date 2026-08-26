@@ -1,6 +1,6 @@
 {
-  "name": "dr-beto-filmari",
-  "version": "1.0.0",
+  "name": "elyra-dental-atelier",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,22 +8,16 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview",
-    "typecheck": "vue-tsc -b"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@lucide/vue": "^1.33.0",
-    "vue": "^3.5.24"
+    "@openai/sites-vite-plugin": "^0.2.0",
+    "gsap": "^3.13.0",
+    "vue": "^3.5.21"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.53.1",
-    "@cloudflare/workers-types": "^5.20260822.1",
-    "@openai/sites-vite-plugin": "^0.2.0",
     "@vitejs/plugin-vue": "^6.0.1",
-    "typescript": "^5.9.3",
-    "vite": "^8.0.13",
-    "vue-tsc": "^3.1.4",
-    "wrangler": "^4.125.0"
+    "vite": "^8.0.13"
   }
 }

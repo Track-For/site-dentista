@@ -1,0 +1,12 @@
+:root {
+  --ink: #111513;
+  --ink-soft: #222825;
+  --ivory: #f1efe8;
+  --paper: #f8f7f2;
+  --silver: #b8bdb9;
+  --sage: #bacabe;
+  --champagne: #cbb895;
+  --line: rgba(17, 21, 19, 0.16);
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
