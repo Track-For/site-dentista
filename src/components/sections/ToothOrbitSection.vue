@@ -221,7 +221,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    <div class="orbit-axis" aria-hidden="true"><span></span><small>−12° ORBITAL AXIS</small></div>
+    <!-- <div class="orbit-axis" aria-hidden="true"><span></span><small>−12° ORBITAL AXIS</small></div> -->
     <p class="orbit-note">Uma imagem simples do que orienta tudo por aqui: forma, função e tecnologia trabalhando como uma só.</p>
   </section>
 </template>

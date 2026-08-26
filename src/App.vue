@@ -32,8 +32,8 @@ onMounted(() => {
       .to('.intro-mark', { opacity: 1, scale: 1, duration: 0.35 }, '-=0.12')
       .to('.intro-screen', { yPercent: -100, duration: 0.75, ease: 'power4.inOut' }, '+=0.15')
       .from('.hero-visual img', { scale: 1.08, filter: 'blur(8px)', opacity: 0, duration: 1.2 }, '-=0.25')
-      .to('.hero-line > span', { yPercent: 0, stagger: 0.08, duration: 0.9 }, '-=0.85')
-      .to('.hero-reveal', { y: 0, opacity: 1, stagger: 0.1, duration: 0.7 }, '-=0.6')
+      .from('.hero-line > span', { yPercent: 110, stagger: 0.08, duration: 0.9 }, '-=0.85')
+      .from('.hero-reveal', { y: 18, autoAlpha: 0, stagger: 0.1, duration: 0.7 }, '-=0.6')
 
     gsap.utils.toArray('.reveal-up').forEach((element) => {
       gsap.from(element, {
